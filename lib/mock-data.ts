@@ -67,6 +67,7 @@ export const integrations: IntegrationStatus[] = [
   { provider: "odoo", connected: false, health: "down", lastSyncAt: "2026-04-22T10:04:00Z", note: "Auth refresh required" },
   { provider: "gmail", connected: true, health: "ok", lastSyncAt: "2026-04-24T18:19:00Z", note: "Inbox mirror healthy" },
   { provider: "calendar", connected: true, health: "ok", lastSyncAt: "2026-04-24T18:19:00Z", note: "Meetings + reminders synced" },
+  { provider: "drive", connected: true, health: "ok", lastSyncAt: "2026-04-24T18:19:00Z", note: "Files index synced" },
   { provider: "stripe", connected: true, health: "ok", lastSyncAt: "2026-04-24T18:16:00Z", note: "Payments + payouts healthy" },
 ];
 

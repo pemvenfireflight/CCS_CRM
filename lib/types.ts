@@ -89,7 +89,7 @@ export interface EmailThread {
 }
 
 export interface IntegrationStatus {
-  provider: "zoho" | "highlevel" | "odoo" | "gmail" | "calendar" | "stripe";
+  provider: "zoho" | "highlevel" | "odoo" | "gmail" | "calendar" | "drive" | "stripe";
   connected: boolean;
   health: "ok" | "warning" | "down";
   lastSyncAt: string;
