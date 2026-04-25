@@ -3,6 +3,7 @@ import { google } from "googleapis";
 export interface GoogleIntegrationSnapshot {
   gmail: { connected: boolean; health: "ok" | "warning" | "down"; note: string };
   calendar: { connected: boolean; health: "ok" | "warning" | "down"; note: string };
+  contacts: { connected: boolean; health: "ok" | "warning" | "down"; note: string };
   drive: { connected: boolean; health: "ok" | "warning" | "down"; note: string };
 }
 
@@ -65,6 +66,7 @@ export function buildGoogleAuthUrl() {
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/calendar.readonly",
       "https://www.googleapis.com/auth/drive.readonly",
+      "https://www.googleapis.com/auth/contacts.readonly",
       "openid",
       "email",
       "profile",
@@ -137,14 +139,52 @@ export async function listCalendarEvents(maxResults = 20) {
   }));
 }
 
-export async function listDriveFiles(query?: string, maxResults = 20) {
+export async function listGoogleContacts(maxResults = 50) {
+  const auth = getGoogleAuthClient();
+  const people = google.people({ version: "v1", auth });
+
+  const res = await people.people.connections.list({
+    resourceName: "people/me",
+    pageSize: maxResults,
+    personFields: "names,emailAddresses,phoneNumbers",
+    sortOrder: "LAST_MODIFIED_DESCENDING",
+  });
+
+  return (res.data.connections ?? []).map((person) => {
+    const name = person.names?.[0]?.displayName ?? "Unnamed contact";
+    const email = person.emailAddresses?.[0]?.value ?? null;
+    const phone = person.phoneNumbers?.[0]?.value ?? null;
+
+    return {
+      resourceName: person.resourceName,
+      name,
+      email,
+      phone,
+    };
+  });
+}
+
+export async function listDriveFiles(
+  query?: string,
+  maxResults = 20,
+  options?: { includeAllDrives?: boolean; driveId?: string }
+) {
   const auth = getGoogleAuthClient();
   const drive = google.drive({ version: "v3", auth });
+
+  const includeAllDrives = options?.includeAllDrives ?? true;
+  const driveId = options?.driveId;
+  const corpora = driveId ? "drive" : includeAllDrives ? "allDrives" : "user";
+
   const res = await drive.files.list({
     pageSize: maxResults,
     q: query,
-    fields: "files(id,name,mimeType,modifiedTime,webViewLink)",
+    fields: "files(id,name,mimeType,modifiedTime,webViewLink,driveId)",
     orderBy: "modifiedTime desc",
+    includeItemsFromAllDrives: includeAllDrives,
+    supportsAllDrives: includeAllDrives,
+    corpora,
+    driveId,
   });
 
   return (res.data.files ?? []).map((f) => ({
@@ -153,6 +193,7 @@ export async function listDriveFiles(query?: string, maxResults = 20) {
     mimeType: f.mimeType,
     modifiedTime: f.modifiedTime,
     webViewLink: f.webViewLink,
+    driveId: f.driveId ?? null,
   }));
 }
 
@@ -162,6 +203,7 @@ export function getGoogleWorkspaceSnapshot(): GoogleIntegrationSnapshot {
     return {
       gmail: { connected: false, health: "warning", note: "Google OAuth not configured" },
       calendar: { connected: false, health: "warning", note: "Google OAuth not configured" },
+      contacts: { connected: false, health: "warning", note: "Google OAuth not configured" },
       drive: { connected: false, health: "warning", note: "Google OAuth not configured" },
     };
   }
@@ -169,6 +211,7 @@ export function getGoogleWorkspaceSnapshot(): GoogleIntegrationSnapshot {
   return {
     gmail: { connected: true, health: "ok", note: "Ready (Gmail readonly)" },
     calendar: { connected: true, health: "ok", note: "Ready (Calendar readonly)" },
-    drive: { connected: true, health: "ok", note: "Ready (Drive readonly)" },
+    contacts: { connected: true, health: "ok", note: "Ready (Contacts readonly)" },
+    drive: { connected: true, health: "ok", note: "Ready (Drive readonly, all drives)" },
   };
 }

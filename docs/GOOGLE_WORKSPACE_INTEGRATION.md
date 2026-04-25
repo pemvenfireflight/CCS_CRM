@@ -1,6 +1,6 @@
-# Google Workspace Integration (Gmail + Calendar + Drive)
+# Google Workspace Integration (Gmail + Calendar + Contacts + Drive)
 
-This project now includes production API routes for Google OAuth and readonly data sync from Gmail, Calendar, and Drive.
+This project includes production API routes for Google OAuth and readonly data sync from Gmail, Calendar, Contacts, and Drive.
 
 ## Implemented routes
 
@@ -14,11 +14,15 @@ This project now includes production API routes for Google OAuth and readonly da
   - Returns message summaries.
 - `GET /api/google/calendar?max=20`
   - Returns upcoming calendar events.
-- `GET /api/google/drive?max=20&query=mimeType='application/pdf'`
-  - Returns Drive file metadata.
+- `GET /api/google/contacts?max=30`
+  - Returns Google Contacts summaries from People API.
+- `GET /api/google/drive?max=20&query=<q>&shared=1`
+  - Returns Drive file metadata and searches across Shared Drives by default.
+- `GET /api/google/drive?driveId=<shared_drive_id>&query=<q>`
+  - Targets a specific shared drive directly.
 
 Also updated:
-- `GET /api/integrations` now reflects live Google configured/not-configured status.
+- `GET /api/integrations` now reflects live Google configured/not-configured status for Gmail, Calendar, Contacts, and Drive.
 - `GET /api/email?live=1` will read from Gmail if Google is configured; otherwise it falls back to mock data.
 
 ## Required env vars
@@ -48,12 +52,14 @@ Use this callback in production:
    - `/api/google/status`
    - `/api/google/calendar`
    - `/api/google/gmail`
-   - `/api/google/drive`
+   - `/api/google/contacts`
+   - `/api/google/drive?shared=1`
 
 ## Notes
 
-- Scopes are currently readonly for safety:
+- Scopes are readonly for safety:
   - Gmail readonly
   - Calendar readonly
+  - Contacts readonly
   - Drive readonly
-- If you want write actions next (send email, create events, upload files), we can add explicit write endpoints with confirmation gates.
+- If you want write actions next (send email, create events, create contacts, upload files), we can add explicit write endpoints with confirmation gates.

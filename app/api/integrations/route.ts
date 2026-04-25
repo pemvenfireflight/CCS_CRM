@@ -21,6 +21,15 @@ export async function GET() {
         lastSyncAt: now,
       };
     }
+    if (item.provider === "contacts") {
+      return {
+        ...item,
+        connected: google.contacts.connected,
+        health: google.contacts.health,
+        note: google.contacts.note,
+        lastSyncAt: now,
+      };
+    }
     if (item.provider === "drive") {
       return { ...item, connected: google.drive.connected, health: google.drive.health, note: google.drive.note, lastSyncAt: now };
     }
